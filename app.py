@@ -186,7 +186,7 @@ def admin_users():
     if "uid" not in session:  #Checks if the user is logged in
         return redirect(url_for("login"))
 
-        user = db().execute(  #Gets the user role from the database
+    user = db().execute(  #Gets the user role from the database
             "SELECT role FROM users WHERE id = ?",
             (session["uid"],)
         ).fetchone()
