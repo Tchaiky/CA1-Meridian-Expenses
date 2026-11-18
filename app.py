@@ -26,7 +26,11 @@ from flask import (
 app = Flask(__name__)
 app.jinja_env.autoescape = True
 app.secret_key = "meridian-dev-key"          # fixed across every deployment
-DB = os.path.join(os.path.dirname(os.path.abspath(__file__)), "expenses.db")
+DB = os.environ.get(
+    "APP_DB",
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "expenses.db")
+)
+
 
 
 def db(): #Connect to SQL database
