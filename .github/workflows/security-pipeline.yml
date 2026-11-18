@@ -16,17 +16,17 @@ jobs:
     name: Bandit (Python SAST)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
       - run: pip install bandit
       # Full report kept as an artifact, whatever the result
-      - name: Generate Badit report
-      - run: bandit -r . -x ./tests,./.venv,./venv -f json -o bandit-results.json || true
+      - name: Generate Bandit report
+        run: bandit -r . -x ./tests,./.venv,./venv -f json -o bandit-results.json || true
       # The gate: fail on MEDIUM severity and above (-ll)
       - run: bandit -r . -x ./tests,./.venv,./venv -ll
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: bandit-results
@@ -38,84 +38,87 @@ jobs:
     container:
       image: semgrep/semgrep
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Scan Python and Flask code
-      - run: semgrep scan --config p/python --config p/flask --error --metrics=off --exclude tests .
+        run: semgrep scan --config p/python --config p/flask --error --metrics=off --exclude tests .
 
   # ------------------------------------------------------------ SCA -------
   pip-audit:
     name: Dependency Audit
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
       - run: pip install pip-audit
 
       - name: Check dependencies
-      - run: pip-audit -r requirements.txt --desc
+        run: pip-audit -r requirements.txt --desc
 
   # ------------------------------------------------------- Secrets -------
   gitleaks:
     name: Gitleaks (Secret Detection)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - name: Scan repository for exposed secrets
-      - uses: gitleaks/gitleaks-actions@v2
+        uses: gitleaks/gitleaks-action@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_ENABLE_COMMENTS: false
 
   # ------------------------------------------------------- Quality -------
   ruff:
     name: Ruff (Code Quality)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
       - run: pip install ruff
 
       - name: Check Python code
-      - run: ruff check . --select E,F,W --ignore E501
+        run: ruff check . --select E,F,W --ignore E501
 
   tests:
     name: Pytest
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
 
       - name: Install dependencies
-      - run: pip install -r requirements.txt pytest
+        run: pip install -r requirements.txt pytest
 
-      - name: Run automated tests
-      - run: python -m pytest -v
+      - name: Run automated security tests
+        run: python -m pytest tests/ -v
 
   # ---------------------------------------------------- Build (gated) -----
   # needs: is the quality gate. If any check above fails, this never runs.
   build:
     name: Build & Package
     runs-on: ubuntu-latest
-    needs: [bandit, semgrep, pip-audit, ruff, tests]
+    needs: [bandit, semgrep, pip-audit, gitleaks, ruff, tests]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Package the release
         run: |
           VERSION="$(date +%Y.%m.%d).${GITHUB_SHA::7}"
-          echo "Packaging NoteShare $VERSION"
+          echo "Packaging Meridian Expenses $VERSION"
           mkdir -p dist
-          tar --exclude=./dist --exclude=./.git -czf "dist/noteshare-$VERSION.tar.gz" .
+          tar --exclude=./dist --exclude=./.git -czf "dist/meridian-expenses-$VERSION.tar.gz" .
           ls -lh dist
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
-          name: noteshare-release
+          name: meridian-expenses-release
           path: dist/
 
   # ----------------------------------------------------------- DAST -------
@@ -126,8 +129,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
 
@@ -146,9 +149,6 @@ jobs:
         uses: zaproxy/action-baseline@v0.15.0
         with:
           target: http://127.0.0.1:5000
-          rules_file_name: .zap/rules.tsv
-          # Report only to begin with. 
-          # then set this to true so regressions block the build.
           fail_action: false
           allow_issue_writing: false
           artifact_name: zap-baseline-report
