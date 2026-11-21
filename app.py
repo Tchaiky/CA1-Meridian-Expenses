@@ -101,8 +101,10 @@ def claim(cid):
     if row is None:
         return "Not found", 404
 
-    #Introducing vulnerability CWE-639.
-
+    #Checks that the claim belongs to the user or user is an admin.
+    if (row["user_id"] != session["uid"]
+       and session.get("role") != "admin"):
+       abort(403)
            
     return render_template("claim.html", c=row)
 
