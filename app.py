@@ -204,6 +204,21 @@ def admin_users():
 
     return render_template("admin.html", users=rows)
 
+#Additional business logic demonstration
+
+@app.route("/claim/<int:cid>/approve", methods=["POST"])
+def approve_claim(cid):
+    if "uid" not in session:
+        return redirect(url_for("login"))
+
+    db().execute(
+        "UPDATE claims SET status = ? WHERE id = ?",
+        ("approved", cid)
+    )
+    db().commit()
+
+    return redirect(url_for("index"))
+
 
 @app.route("/debug/config")
 def debug_config():
