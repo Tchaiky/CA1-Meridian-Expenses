@@ -9,7 +9,7 @@ on:
 
 permissions:
   contents: read
-  pull_requests: read            # least privilege: the jobs only need to read the code
+  pull-requests: read            # least privilege: the jobs only need to read the code
 
 jobs:
   # ----------------------------------------------------------- SAST -------
