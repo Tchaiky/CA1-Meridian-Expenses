@@ -210,15 +210,6 @@ def debug_config():
     return {"secret_key": app.secret_key, "db": DB,
             "env": {k: v for k, v in os.environ.items() if "CCT" in k or "FLASK" in k}}
 
-#Introducin Vulnerability CWE-78
-def vulnerable_command(user_input):
-
-    return subprocess.run(
-        "echo " + user_input,
-        shell=True,
-        capture_output=True,
-        text=True
-    )
 
 if __name__ == "__main__":
     app.run(host="127.0.0.1", port=5000, debug=True)
