@@ -8,20 +8,27 @@ Do not deploy. Do not expose beyond localhost. Contains no real data.
 There are more than six distinct, independently exploitable defects in this
 file and its siblings. They are not marked.
 """
-import hashlib
-import os
-import json
-import sqlite3
-import subprocess
 import csv
 import io
-import re 
+import json
+import os
+import re
+import sqlite3
 from io import BytesIO
 
 from flask import (
-    Flask, g, session, request, redirect, url_for, 
-    render_template, abort, send_file, send_from_directory
+    Flask,
+    abort,
+    g,
+    redirect,
+    render_template,
+    request,
+    send_file,
+    send_from_directory,
+    session,
+    url_for,
 )
+from werkzeug.security import check_password_hash, generate_password_hash
 
 app = Flask(__name__)
 app.jinja_env.autoescape = True
@@ -47,8 +54,8 @@ def close(_exc):
         d.close()
 
 
-def hash_pw(pw):   #MD5 password hashing (another vulnerability)
-    return hashlib.md5(pw.encode()).hexdigest()
+def hash_pw(pw): 
+    return generate_password_hash(pw)
 
 
 @app.route("/", methods=["GET"])
@@ -73,13 +80,17 @@ def login():
         q = ("SELECT id, name, role, password FROM users "
              "WHERE username = ?")
         row = db().execute(q, (u,)).fetchone()
-        #Using MD5 password hashes.
-        if row and row["password"] == hashlib.md5(p.encode()).hexdigest():
-            session["uid"], session["name"], session["role"] = row["id"], row["name"], row["role"]
+       
+        if row and check_password_hash(row["password"], p):
+            session["uid"], session["name"], session["role"] = (
+                row["id"], row["name"], row["role"]
+            )
             return redirect(url_for("index"))
         exists = db().execute(
-            "SELECT 1 FROM users WHERE username = ?", (u,)).fetchone()
+            "SELECT 1 FROM users WHERE username = ?", (u,)
+        ).fetchone()
         error = "Wrong password." if exists else "No such user."
+
     return render_template("login.html", error=error)
 
 
@@ -227,4 +238,4 @@ def debug_config():
 
 
 if __name__ == "__main__":
-    app.run(host="127.0.0.1", port=5000, debug=True)
+    app.run(host="127.0.0.1", port=5000, debug=False)

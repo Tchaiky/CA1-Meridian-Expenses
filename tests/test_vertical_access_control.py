@@ -1,6 +1,8 @@
 import sqlite3
-import hashlib
+
 import pytest
+from werkzeug.security import generate_password_hash
+
 import app as app_module
 
 flask_app = app_module.app
@@ -41,7 +43,7 @@ def client(tmp_path, monkeypatch):
         ("admin", "admin", "System Admin", "admin")]
 
     for username, password, name, role in users:
-        password_hash = hashlib.md5(password.encode()).hexdigest()
+        password_hash = generate_password_hash(password)
         connection.execute(
             "INSERT INTO users VALUES (?, ?, ?, ?, ?)",
             (None, username, password_hash, name, role)

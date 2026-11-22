@@ -1,5 +1,9 @@
 """Create expenses.db with sample data. No real people, no real money."""
-import hashlib, os, sqlite3
+import os
+import sqlite3
+
+from werkzeug.security import generate_password_hash
+
 DB = os.path.join(os.path.dirname(os.path.abspath(__file__)), "expenses.db")
 if os.path.exists(DB):
     os.remove(DB)
@@ -9,14 +13,14 @@ CREATE TABLE users (id INTEGER PRIMARY KEY, username TEXT, password TEXT, name T
 CREATE TABLE claims (id INTEGER PRIMARY KEY, user_id INTEGER, merchant TEXT,
                      amount REAL, note TEXT, status TEXT);
 """)
-md5 = lambda p: hashlib.md5(p.encode()).hexdigest()
+hash_pw = lambda p: generate_password_hash(p)
 users = [("jdoe", "password1", "Jane Doe", "staff"),
          ("rsmith", "letmein", "Rob Smith", "staff"),
          ("achen", "Summer2026", "Ada Chen", "finance"),
          ("admin", "admin", "System Admin", "admin")]
 for u, p, n, r in users:
     c.execute("INSERT INTO users (username,password,name,role) VALUES (?,?,?,?)",
-              (u, md5(p), n, r))
+              (u, hash_pw(p), n, r))
 claims = [(1, "Dublin Coach", 24.50, "Client visit", "approved"),
           (1, "Aer Lingus", 310.00, "Conference travel", "pending"),
           (2, "Tesco", 18.20, "Team lunch", "approved"),
