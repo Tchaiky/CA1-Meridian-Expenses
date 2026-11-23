@@ -71,7 +71,7 @@ def login(client, user):
         follow_redirects=True
     )
     assert response.status_code == 200
-    
+
 # CWE-862: Missing Authorization
 # CWE-863: Incorrect Authorization
 # OWASP WSTG-ATHZ-02: Testing for Bypassing Authorization Schema
@@ -92,10 +92,10 @@ def test_vertical_access_control(client, user, expected_status):
     assert response.status_code == expected_status
 
     if user in ("jane", "rob"):
-        assert b"System Admin" not in response.data 
+        assert b"System Admin" not in response.data
 
     if user == "admin":
-        assert b"System Admin" in response.data    
+        assert b"System Admin" in response.data
 
 def test_anonymous_user_cannot_access_admin_users(client):
     response = client.get("/admin/users")

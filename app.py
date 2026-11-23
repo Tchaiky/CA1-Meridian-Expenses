@@ -54,7 +54,7 @@ def close(_exc):
         d.close()
 
 
-def hash_pw(pw): 
+def hash_pw(pw):
     return generate_password_hash(pw)
 
 
@@ -80,7 +80,7 @@ def login():
         q = ("SELECT id, name, role, password FROM users "
              "WHERE username = ?")
         row = db().execute(q, (u,)).fetchone()
-       
+
         if row and check_password_hash(row["password"], p):
             session["uid"], session["name"], session["role"] = (
                 row["id"], row["name"], row["role"]
@@ -107,7 +107,7 @@ def claim(cid):
     if "uid" not in session:
         return redirect(url_for("login"))
 
-    #Another parameterised query. 
+    #Another parameterised query.
     row = db().execute("SELECT * FROM claims WHERE id = ?", (cid,)).fetchone()
     if row is None:
         return "Not found", 404
@@ -116,7 +116,7 @@ def claim(cid):
     if (row["user_id"] != session["uid"]
        and session.get("role") != "admin"):
        abort(403)
-           
+
     return render_template("claim.html", c=row)
 
 
@@ -152,12 +152,12 @@ def receipt():
 def export():
     month = request.args.get("month", "2026-09")
 
-    #Validates the month parameter. 
+    #Validates the month parameter.
     if not re.fullmatch(r"\d{4}-(0[1-9]|1[0-2])", month):
         return "Invalid month", 400
 
     #Generate csv with Python instead of shell commands.
-    output = io.StringIO(newline="") 
+    output = io.StringIO(newline="")
     writer = csv.writer(output)
 
     #Retrieve database without executing OS commands.

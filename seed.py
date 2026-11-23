@@ -13,7 +13,11 @@ CREATE TABLE users (id INTEGER PRIMARY KEY, username TEXT, password TEXT, name T
 CREATE TABLE claims (id INTEGER PRIMARY KEY, user_id INTEGER, merchant TEXT,
                      amount REAL, note TEXT, status TEXT);
 """)
-hash_pw = lambda p: generate_password_hash(p)
+
+def hash_pw(p):
+    return generate_password_hash(p)
+
+
 users = [("jdoe", "password1", "Jane Doe", "staff"),
          ("rsmith", "letmein", "Rob Smith", "staff"),
          ("achen", "Summer2026", "Ada Chen", "finance"),

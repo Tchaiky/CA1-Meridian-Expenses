@@ -75,7 +75,7 @@ def login(client, user):
         follow_redirects=True
     )
     assert response.status_code == 200
-    
+
 # CWE-639: Authorisation bypass through user-controlled keys
 # OWASP WSTG-ATHZ-04: Testing for Insecure Direct Object References
 
@@ -99,7 +99,7 @@ def test_horizontal_access_control(client, user, claim_id, expected_status):
         assert b"Client visit" not in response.data
 
     if user == "admin":
-        assert b"Dublin Coach" in response.data    
+        assert b"Dublin Coach" in response.data
 
 def test_anonymous_user_cannot_access_claim(client):
     response = client.get("/claim/1")
