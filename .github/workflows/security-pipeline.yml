@@ -8,7 +8,8 @@ on:
   workflow_dispatch:        # adds a "Run workflow" button on the Actions tab
 
 permissions:
-  contents: read            # least privilege: the jobs only need to read the code
+  contents: read
+  pull-requests: read            # least privilege: the jobs only need to read the code
 
 jobs:
   # ----------------------------------------------------------- SAST -------

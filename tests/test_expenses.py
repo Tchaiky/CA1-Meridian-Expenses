@@ -1,6 +1,8 @@
 import sqlite3
-import hashlib
+
 import pytest
+from werkzeug.security import generate_password_hash
+
 import app as app_module
 
 flask_app = app_module.app
@@ -41,7 +43,7 @@ def client(tmp_path, monkeypatch):
         ("admin", "admin", "System Admin", "admin")]
 
     for username, password, name, role in users:
-        password_hash = hashlib.md5(password.encode()).hexdigest()
+        password_hash = generate_password_hash(password)
         connection.execute(
             "INSERT INTO users VALUES (?, ?, ?, ?, ?)",
             (None, username, password_hash, name, role)
@@ -73,7 +75,7 @@ def login(client, user):
         follow_redirects=True
     )
     assert response.status_code == 200
-    
+
 # CWE-639: Authorisation bypass through user-controlled keys
 # OWASP WSTG-ATHZ-04: Testing for Insecure Direct Object References
 
@@ -97,7 +99,7 @@ def test_horizontal_access_control(client, user, claim_id, expected_status):
         assert b"Client visit" not in response.data
 
     if user == "admin":
-        assert b"Dublin Coach" in response.data    
+        assert b"Dublin Coach" in response.data
 
 def test_anonymous_user_cannot_access_claim(client):
     response = client.get("/claim/1")

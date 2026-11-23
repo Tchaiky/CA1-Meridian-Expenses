@@ -1,6 +1,8 @@
 import sqlite3
-import hashlib
+
 import pytest
+from werkzeug.security import generate_password_hash
+
 import app as app_module
 
 flask_app = app_module.app
@@ -41,7 +43,7 @@ def client(tmp_path, monkeypatch):
         ("admin", "admin", "System Admin", "admin")]
 
     for username, password, name, role in users:
-        password_hash = hashlib.md5(password.encode()).hexdigest()
+        password_hash = generate_password_hash(password)
         connection.execute(
             "INSERT INTO users VALUES (?, ?, ?, ?, ?)",
             (None, username, password_hash, name, role)
@@ -69,7 +71,7 @@ def login(client, user):
         follow_redirects=True
     )
     assert response.status_code == 200
-    
+
 # CWE-862: Missing Authorization
 # CWE-863: Incorrect Authorization
 # OWASP WSTG-ATHZ-02: Testing for Bypassing Authorization Schema
@@ -90,10 +92,10 @@ def test_vertical_access_control(client, user, expected_status):
     assert response.status_code == expected_status
 
     if user in ("jane", "rob"):
-        assert b"System Admin" not in response.data 
+        assert b"System Admin" not in response.data
 
     if user == "admin":
-        assert b"System Admin" in response.data    
+        assert b"System Admin" in response.data
 
 def test_anonymous_user_cannot_access_admin_users(client):
     response = client.get("/admin/users")
